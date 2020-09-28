@@ -1,0 +1,78 @@
+**1) Ordered Binary Tree**
+
+This problem appeared pretty straightforward, as I've implemented binary trees in the past in
+multiple different languages. However it does get complicated trying to satisfy the function
+prototype- after some effort trying to use insert to initialize the tree root, I ran into 
+a few problems. The most pressing one was that if I instantiated the initial node as a null
+pointer, the insert prototype led to it being treated as passing by value, so the changes 
+were not being saved. Attempting to fix this by declaring the root as a struct without a value and passing
+in its reference led to not being able to recognize that it was null, and thus not creating a node for it.
+
+I was able to resolve this issue by adding a new_node function that was used to initialize the tree,
+which also provided a useful helper for the insert function. Because directly setting the tree
+value passed into the function would not persist, I had to eliminate any direct checks if it was null
+when recursing in the insert function, and rely on looking to see if its left or right children were null
+before recursing to there. Thankfully, this approach was successful.
+
+My solution doesn't perfectly handle numbers being input that are already in the tree. I imagine either
+way I handle it, if I were to input several 5's, for instance, that will result in a long stretch of the tree
+more akin to a linked list. I could simply not accept the same number if found, but that assumes too much
+about the use case. A proper balancing algorithm would be adequate for managing it, at least.
+
+
+
+**2) Maximal Contiguous Sum**
+
+After thinking about the problem for a bit, my first instinct was to start with the array itself and find the smallest number at
+the ends. For instance: [0, -3, 2, 1, 4, 5, 9, -3, 2] => 0.
+
+[0, -3, 2, 1, 4, 5, 9, -3, 2] => 0
+[-3, 2, 1, 4, 5, 9, -3, 2] => -3
+[2, 1, 4, 5, 9, -3, 2] => 2... versus 2.
+
+I realized the flaw of this approach, as it became clear, besides the problem of even numbers, that it was easy to drop the wrong number.
+Then I noticed that in the given example array: [0, -3, 2, 1, 4, 5, 9, -3, 2], the actual maximum subarray is bounded by
+negative numbers on both ends- the first -3 excludes the 0, and the other -3 excludes the 2. This implied that having at least one 
+negative number is key to finding the maximum contiguous subarray. If the original array is all positive, then the problem is trivial.
+
+What I then thought about is, I had been looking for the wrong result. I don't need to know when the maximum subarray starts or ends,
+I only need to know what its sum is, and the easiest way to do that is to iterate through the array. At first I attempted to drop the current
+sum any time I encountered a negative number, but that could easily lead to missing the actual subsequence. I realized I could skip over indexes
+that weren't part of the maximum subarray by seeing if the current sum is negative. If so, then the preceding indexes cannot be part of the
+maximum subarray and can be safely discarded and overwritten with the value at the new index. A second value will be used to store
+each highest new value reached by the current sum, which upon return will be the sum of the maximum subarray.
+
+Some edge cases that were not handled are if an input array is exclusively negative numbers. One possible approach would be to always return
+the least negative number in the array, or alternatively just return zero.
+
+
+
+**3) Array Bitpacking**
+
+The first step was to make sure I properly understood the program requirements. I examined
+the input hex values and made sure I knew what the inputs and outputs were supposed to be.
+
+4 12-bit integers => 6 bytes
+make the 12-bit integers into 16-bit integers => 8 bytes, each integer with a leading 0 byte in memory
+
+In other words, make the following:
+0x3e8, 0x3e9, 0x3ea, 0x3eb
+
+into:
+0x03e8, 0x03e9, 0x03ea, 0x03eb
+
+The easiest way to know that I have succeeded would be to assert the size of the input array was 6,
+and the size of the output array was 8.
+
+I attempted to find a 12-bit integer type in stdint.h but was unsuccessful. After trying that,
+I thought of some ways to represent 12-bit integers in an array. I tried a byte array with six elements,
+exactly matching the in-memory representation, but I couldn't figure out to proceed with it after trying
+to recombine the different bytes in the right order, i.e. 0x3e, 0x83, 0xe9 and turn that into 0x3e8 and 0x3e9.
+
+I considered using bitwise operators to engineer a 48-bit block of binary that would match the in-memory representation,
+but it wouldn't have been an array and thus fails to satisfy the requirements for the input.
+
+I then attempted using a bit field struct typedef'ed to an int12_t type that I could use to put a cap on the size of
+the integers used, but it failed the size assertion and I realized it also would not match the in-memory representation.
+
+I think I'm missing some critical knowledge to solve this problem and I don't know how to proceed.
